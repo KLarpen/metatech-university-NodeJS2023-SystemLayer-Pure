@@ -2,8 +2,8 @@
 
 const fsp = require('node:fs').promises;
 const path = require('node:path');
+
 const config = require('./config.js');
-const staticServer = require('./lib/static.js');
 const db = require('./lib/db.js')(config.DB);
 const common = require('./lib/common.js')(config);
 const logger = require('./lib/logger/provider.js')({
@@ -11,8 +11,10 @@ const logger = require('./lib/logger/provider.js')({
   /** Absolute path to the application root folder to filter out from stack traces */
   appRootPath: process.cwd(),
 });
-const load = require('./lib/load.js')(config.SANDBOX_RUN_OPTIONS);
-const server = require(`./transport/${config.transport}.js`);
+
+const staticServer = require('./src/static.js');
+const load = require('./src/load.js')(config.SANDBOX_RUN_OPTIONS);
+const server = require(`./src/transport/${config.transport}.js`);
 
 const sandbox = {
   api: Object.freeze({}),
