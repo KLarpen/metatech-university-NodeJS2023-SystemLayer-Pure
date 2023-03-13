@@ -15,25 +15,26 @@ const apiPath = path.join(appPath, './api');
 const configPath = path.join(appPath, './config.js');
 const staticPath = path.join(appPath, './static');
 
-const config = require(configPath);
-const db = require('./lib/db.js')(config.DB);
-
-const sandbox = {
-  api: Object.freeze({}),
-  db: Object.freeze(db),
-  console: Object.freeze(logger),
-  common: Object.freeze(common),
-};
-
-const routing = {};
-
 (async () => {
+  const sandbox = {
+    console: Object.freeze(logger),
+    common: Object.freeze(common),
+  };
+
+  const config = await load(configPath, sandbox);
+  const db = require('./lib/db.js')(config.DB);
+
+  sandbox.api = Object.freeze({});
+  sandbox.db = Object.freeze(db);
+
+  const routing = {};
+
   const files = await fsp.readdir(apiPath);
   for (const fileName of files) {
     if (!fileName.endsWith('.js')) continue;
     const filePath = path.join(apiPath, fileName);
     const serviceName = path.basename(fileName, '.js');
-    routing[serviceName] = await load(filePath, Object.freeze({ ...sandbox }));
+    routing[serviceName] = await load(filePath, sandbox);
     logger.log(
       'Service { name: %s, methods: [%s] }',
       serviceName,
