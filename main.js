@@ -3,17 +3,24 @@
 const fsp = require('node:fs').promises;
 const path = require('node:path');
 
-const config = require('./config.js');
+const systemConfig = require('./systemConfig.js');
+const common = require('./lib/common.js')(systemConfig);
+const load = require('./src/load.js')(systemConfig.SANDBOX_RUN_OPTIONS);
+const staticServer = require('./src/static.js');
+
+const appPath = path.join(process.cwd(), systemConfig.APPLICATION);
+const apiPath = path.join(appPath, './api');
+const configPath = path.join(appPath, './config.js');
+const staticPath = path.join(appPath, './static');
+
+const config = require(configPath);
 const db = require('./lib/db.js')(config.DB);
-const common = require('./lib/common.js')(config);
 const logger = require('./lib/logger/provider.js')({
   ...config.LOGGER,
   /** Absolute path to the application root folder to filter out from stack traces */
-  appRootPath: process.cwd(),
+  appRootPath: appPath,
 });
 
-const staticServer = require('./src/static.js');
-const load = require('./src/load.js')(config.SANDBOX_RUN_OPTIONS);
 const server = require(`./src/transport/${config.transport}.js`);
 
 const sandbox = {
@@ -22,7 +29,7 @@ const sandbox = {
   console: Object.freeze(logger),
   common: Object.freeze(common),
 };
-const apiPath = path.join(process.cwd(), './api');
+
 const routing = {};
 
 (async () => {
@@ -39,7 +46,7 @@ const routing = {};
     );
   }
 
-  staticServer('./static', config.SERVERS.static.port, sandbox.console);
+  staticServer(staticPath, config.SERVERS.static.port, sandbox.console);
   server(routing, config.SERVERS[config.transport].port, {
     console: sandbox.console,
     allowedClientOrigins: [config.SERVERS.static],
