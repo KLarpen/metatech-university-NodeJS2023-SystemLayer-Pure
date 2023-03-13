@@ -7,6 +7,7 @@ const systemConfig = require('./systemConfig.js');
 const common = require('./lib/common.js')(systemConfig);
 const load = require('./src/load.js')(systemConfig.SANDBOX_RUN_OPTIONS);
 const staticServer = require('./src/static.js');
+const ws = require('./src/ws.js');
 
 const appPath = path.join(process.cwd(), systemConfig.APPLICATION);
 const apiPath = path.join(appPath, './api');
@@ -20,8 +21,6 @@ const logger = require('./lib/logger/provider.js')({
   /** Absolute path to the application root folder to filter out from stack traces */
   appRootPath: appPath,
 });
-
-const server = require(`./src/transport/${config.transport}.js`);
 
 const sandbox = {
   api: Object.freeze({}),
@@ -46,9 +45,7 @@ const routing = {};
     );
   }
 
-  staticServer(staticPath, config.SERVERS.static.port, sandbox.console);
-  server(routing, config.SERVERS[config.transport].port, {
-    console: sandbox.console,
-    allowedClientOrigins: [config.SERVERS.static],
-  });
+  const port = config.SERVERS.static.port;
+  const server = staticServer(staticPath, port, logger);
+  ws(routing, server, logger);
 })();
