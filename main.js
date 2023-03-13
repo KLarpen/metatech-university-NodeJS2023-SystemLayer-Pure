@@ -5,6 +5,7 @@ const path = require('node:path');
 
 const systemConfig = require('./systemConfig.js');
 const common = require('./lib/common.js')(systemConfig);
+const logger = require('./lib/logger.js')(systemConfig.LOG_DIR, process.cwd());
 const load = require('./src/load.js')(systemConfig.SANDBOX_RUN_OPTIONS);
 const staticServer = require('./src/static.js');
 const ws = require('./src/ws.js');
@@ -16,11 +17,6 @@ const staticPath = path.join(appPath, './static');
 
 const config = require(configPath);
 const db = require('./lib/db.js')(config.DB);
-const logger = require('./lib/logger/provider.js')({
-  ...config.LOGGER,
-  /** Absolute path to the application root folder to filter out from stack traces */
-  appRootPath: appPath,
-});
 
 const sandbox = {
   api: Object.freeze({}),

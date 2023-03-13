@@ -6,6 +6,11 @@
  * @type {typeof import('systemConfig').APPLICATION}
  */
 const APPLICATION = '../metatech-university-NodeJS2023-Application-metaschema';
+/**
+ * Path to the folder to store log files in. Relative path allowed
+ * @type {typeof import('systemConfig').LOG_DIR}
+ */
+const LOG_DIR = './log';
 
 /**
  * Crypto module settings for the hashing algorithm
@@ -26,6 +31,7 @@ const SANDBOX_RUN_OPTIONS = {
 
 module.exports = {
   APPLICATION,
+  LOG_DIR,
   HASHING,
   SANDBOX_RUN_OPTIONS,
 };
