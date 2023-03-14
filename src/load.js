@@ -11,7 +11,7 @@ module.exports = (options) => {
     const script = new vm.Script(code, { filename: filePath, lineOffset: -1 });
     const context = vm.createContext(Object.freeze({ ...sandbox }));
     const exported = script.runInContext(context, options);
-    return exported;
+    return typeof exported === 'object' ? exported : { method: exported };
   };
 
   const loadDir = async (dir, sandbox) => {
