@@ -22,14 +22,14 @@ const staticPath = path.join(appPath, './static');
   };
 
   const config = await loadDir(configPath, sandbox);
-  const db = require('./lib/db.js')(config.db);
+  const db = require('./lib/db.js')(config.database);
 
   sandbox.api = Object.freeze({});
   sandbox.db = Object.freeze(db);
 
   const routing = await loadDir(apiPath, sandbox);
 
-  const port = config.SERVERS.static.port;
+  const [port] = config.server.ports;
   const server = staticServer(staticPath, port, logger);
   ws(routing, server, logger);
 })();
