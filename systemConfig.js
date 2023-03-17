@@ -13,14 +13,6 @@ const APPLICATION = '../metatech-university-NodeJS2023-Application-metaschema';
 const LOG_DIR = './log';
 
 /**
- * Crypto module settings for the hashing algorithm
- * @type {typeof import('systemConfig').HASHING}
- */
-const HASHING = {
-  saltLength: 16,
-  keyLength: 64,
-};
-/**
  * Sandboxes settings
  * @type {typeof import('systemConfig').SANDBOX_RUN_OPTIONS}
  */
@@ -32,6 +24,5 @@ const SANDBOX_RUN_OPTIONS = {
 module.exports = {
   APPLICATION,
   LOG_DIR,
-  HASHING,
   SANDBOX_RUN_OPTIONS,
 };

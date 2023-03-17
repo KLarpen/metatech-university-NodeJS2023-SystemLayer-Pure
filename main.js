@@ -2,15 +2,19 @@
 
 const path = require('node:path');
 
-const systemConfig = require('./systemConfig.js');
-const common = require('./lib/common.js')(systemConfig);
-const logger = require('./lib/logger.js')(systemConfig.LOG_DIR, process.cwd());
-const { loadDir } = require('./src/load.js')(systemConfig.SANDBOX_RUN_OPTIONS);
+const {
+  LOG_DIR,
+  SANDBOX_RUN_OPTIONS,
+  APPLICATION,
+} = require('./systemConfig.js');
+const common = require('./lib/common.js');
+const logger = require('./lib/logger.js')(LOG_DIR, process.cwd());
+const { loadDir } = require('./src/load.js')(SANDBOX_RUN_OPTIONS);
 
 const staticServer = require('./src/static.js');
 const ws = require('./src/ws.js');
 
-const appPath = path.join(process.cwd(), systemConfig.APPLICATION);
+const appPath = path.join(process.cwd(), APPLICATION);
 const apiPath = path.join(appPath, './api');
 const configPath = path.join(appPath, './config');
 const staticPath = path.join(appPath, './static');
