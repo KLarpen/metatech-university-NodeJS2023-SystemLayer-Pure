@@ -9,7 +9,7 @@ const {
 } = require('./systemConfig.js');
 const common = require('./lib/common.js');
 const logger = require('./lib/logger.js')(LOG_DIR, process.cwd());
-const { loadDir } = require('./src/load.js')(SANDBOX_RUN_OPTIONS);
+const { loadDir } = require('./src/loader.js')(SANDBOX_RUN_OPTIONS);
 
 const staticServer = require('./src/static.js');
 const ws = require('./src/ws.js');
