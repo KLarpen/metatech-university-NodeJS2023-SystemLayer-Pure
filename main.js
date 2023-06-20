@@ -31,7 +31,7 @@ const staticPath = path.join(appPath, './static');
   sandbox.api = Object.freeze({});
   sandbox.db = Object.freeze(db);
 
-  const routing = await loadDir(apiPath, sandbox);
+  const routing = await loadDir(apiPath, sandbox, true);
 
   const [port] = config.server.ports;
   const server = staticServer(staticPath, port, logger);
