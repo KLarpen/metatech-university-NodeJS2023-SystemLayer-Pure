@@ -12,7 +12,20 @@ const { loadDir, createRouting } =
 const staticServer = require('./src/static.js');
 const ws = require('./src/ws.js');
 
-const sandbox = { console, common };
+/**
+ * Sandbox Base object with some nulled properties
+ * to reserve it's shape and namespaces
+ */
+const sandbox = {
+  console,
+  common,
+  application: null,
+  config: null,
+  db: null,
+  lib: null,
+  domain: null,
+  api: null,
+};
 
 (async () => {
   /* There is future possibility to place multiple applications paths into the config file,
@@ -20,16 +33,26 @@ const sandbox = { console, common };
   the logic has consider that only single path existed in the file! */
   const applications = await fsp.readFile('.applications', 'utf8');
   const appPath = path.join(process.cwd(), applications.trim());
+  sandbox.application = Object.freeze({ path: appPath });
 
   const configPath = path.join(appPath, './config');
   const config = await loadDir(configPath, sandbox);
+  sandbox.config = Object.freeze(config);
 
   const db = require('./lib/db.js')(config.database);
   sandbox.db = Object.freeze(db);
 
+  const libPath = path.join(appPath, './lib');
+  const lib = await loadDir(libPath, sandbox);
+  sandbox.lib = Object.freeze(lib);
+
+  const domainPath = path.join(appPath, './domain');
+  const domain = await loadDir(domainPath, sandbox);
+  sandbox.domain = Object.freeze(domain);
+
   const apiPath = path.join(appPath, './api');
   const api = await loadDir(apiPath, sandbox, true);
-  sandbox.api = api;
+  sandbox.api = Object.freeze(api);
   const routing = createRouting(api);
 
   const staticPath = path.join(appPath, './static');
