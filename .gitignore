@@ -46,3 +46,6 @@ coverage
 # dotenv environment variables file
 .env
 .env.test
+
+# Relative path to the domain applications folders configured in file
+.applications
