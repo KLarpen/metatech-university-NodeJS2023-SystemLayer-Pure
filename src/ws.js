@@ -10,9 +10,7 @@ module.exports = (routing, server, console) => {
     connection.on('message', async (message) => {
       const obj = JSON.parse(message);
       const { name, method, args = [] } = obj;
-      const entity = routing[name];
-      if (!entity) return connection.send('"Not found"', { binary: false });
-      const handler = entity[method];
+      const handler = routing.get(`${name}.${method}`);
       if (!handler) return connection.send('"Not found"', { binary: false });
       const json = JSON.stringify(args);
       const parameters = json.substring(1, json.length - 1);

@@ -6,7 +6,8 @@ const fsp = require('node:fs').promises;
 const { LOG_DIR, SANDBOX_RUN_OPTIONS } = require('./systemConfig.js');
 const common = require('./lib/common.js');
 const console = require('./lib/logger.js')(LOG_DIR, process.cwd());
-const { loadDir } = require('./src/loader.js')(SANDBOX_RUN_OPTIONS);
+const { loadDir, createRouting } =
+  require('./src/loader.js')(SANDBOX_RUN_OPTIONS);
 
 const staticServer = require('./src/static.js');
 const ws = require('./src/ws.js');
@@ -27,8 +28,9 @@ const sandbox = { console, common };
   sandbox.db = Object.freeze(db);
 
   const apiPath = path.join(appPath, './api');
-  const routing = await loadDir(apiPath, sandbox, true);
-  sandbox.api = Object.freeze({}); // TODO: replace stub with real content
+  const api = await loadDir(apiPath, sandbox, true);
+  sandbox.api = api;
+  const routing = createRouting(api);
 
   const staticPath = path.join(appPath, './static');
   const [port] = config.server.ports;
