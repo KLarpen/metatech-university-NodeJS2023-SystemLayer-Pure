@@ -8,7 +8,7 @@ const {
   APPLICATION,
 } = require('./systemConfig.js');
 const common = require('./lib/common.js');
-const logger = require('./lib/logger.js')(LOG_DIR, process.cwd());
+const console = require('./lib/logger.js')(LOG_DIR, process.cwd());
 const { loadDir } = require('./src/loader.js')(SANDBOX_RUN_OPTIONS);
 
 const staticServer = require('./src/static.js');
@@ -20,10 +20,7 @@ const configPath = path.join(appPath, './config');
 const staticPath = path.join(appPath, './static');
 
 (async () => {
-  const sandbox = {
-    console: Object.freeze(logger),
-    common: Object.freeze(common),
-  };
+  const sandbox = { console, common };
 
   const config = await loadDir(configPath, sandbox);
   const db = require('./lib/db.js')(config.database);
@@ -34,6 +31,6 @@ const staticPath = path.join(appPath, './static');
   const routing = await loadDir(apiPath, sandbox, true);
 
   const [port] = config.server.ports;
-  const server = staticServer(staticPath, port, logger);
-  ws(routing, server, logger);
+  const server = staticServer(staticPath, port, console);
+  ws(routing, server, console);
 })();
