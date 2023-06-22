@@ -8,9 +8,7 @@ const common = require('./lib/common.js');
 const console = require('./lib/logger.js')(LOG_DIR, process.cwd());
 const { loadDir, createRouting } =
   require('./src/loader.js')(SANDBOX_RUN_OPTIONS);
-
-const staticServer = require('./src/static.js');
-const ws = require('./src/ws.js');
+const { Server } = require('./src/server.js');
 
 /**
  * Sandbox Base object with some nulled properties
@@ -55,8 +53,6 @@ const sandbox = {
   sandbox.api = Object.freeze(api);
   const routing = createRouting(api);
 
-  const staticPath = path.join(appPath, './static');
-  const [port] = config.server.ports;
-  const server = staticServer(staticPath, port, console);
-  ws(routing, server, console);
+  const application = { path: appPath, console, routing, config, server: null };
+  application.server = new Server(application);
 })();

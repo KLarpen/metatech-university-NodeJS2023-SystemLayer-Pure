@@ -31,7 +31,7 @@ module.exports = (options) => {
   const createRouting = (container, path = '', routing = new Map()) => {
     for (const [key, value] of Object.entries(container)) {
       const location = path ? `${path}.${key}` : key;
-      if (typeof value?.method === 'function') routing.set(location, value);
+      if (typeof value === 'function') routing.set(location, value);
       else createRouting(value, location, routing);
     }
     return routing;
