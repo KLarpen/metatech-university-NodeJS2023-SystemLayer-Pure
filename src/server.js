@@ -3,6 +3,8 @@
 const http = require('node:http');
 const path = require('node:path');
 const fsp = require('node:fs').promises;
+const crypto = require('node:crypto');
+const { EventEmitter } = require('node:events');
 const ws = require('ws');
 const { receiveBody, jsonParse } = require('../lib/common.js');
 const {
@@ -11,6 +13,82 @@ const {
   MIME_TYPES,
   HEADERS,
 } = require('./transport.js');
+
+const sessions = new Map(); // <token, Session>
+
+class Session {
+  constructor(token, data) {
+    this.token = token;
+    this.state = { ...data };
+  }
+}
+
+class Context {
+  constructor(client) {
+    this.client = client;
+    this.uuid = crypto.randomUUID();
+    this.state = {};
+    this.session = client?.session || null;
+  }
+}
+
+class Client extends EventEmitter {
+  #transport;
+
+  constructor(transport) {
+    super();
+    this.#transport = transport;
+    this.ip = transport.ip;
+    this.session = null;
+  }
+
+  error(code, options) {
+    this.#transport.error(code, options);
+  }
+
+  send(obj, code) {
+    this.#transport.send(obj, code);
+  }
+
+  emit(name, data) {
+    if (name === 'close') {
+      super.emit(name, data);
+      return;
+    }
+    this.send({ type: 'event', name, data });
+  }
+
+  createContext() {
+    return new Context(this);
+  }
+
+  initializeSession(token, data = {}) {
+    this.finalizeSession();
+    this.session = new Session(token, data);
+    sessions.set(token, this.session);
+    return true;
+  }
+
+  finalizeSession() {
+    if (!this.session) return false;
+    sessions.delete(this.session.token);
+    this.session = null;
+    return true;
+  }
+
+  restoreSession(token) {
+    const session = sessions.get(token);
+    if (!session) return false;
+    this.session = session;
+    return true;
+  }
+
+  destroy() {
+    this.emit('close');
+    if (!this.session) return;
+    this.finalizeSession();
+  }
+}
 
 const serveStatic = (staticPath) => async (req, res) => {
   const url = req.url === '/' ? '/index.html' : req.url;
@@ -49,26 +127,36 @@ class Server {
       }
 
       const transport = new HttpTransport(this, req, res);
+      const client = new Client(transport);
       const data = await receiveBody(req);
-      this.rpc(transport, data);
+      this.rpc(client, data);
+
+      req.on('close', () => {
+        client.destroy();
+      });
     });
 
     const wsServer = new ws.Server({ server: this.httpServer });
     wsServer.on('connection', (connection, req) => {
       const transport = new WsTransport(this, req, connection);
+      const client = new Client(transport);
 
       connection.on('message', async (data) => {
-        this.rpc(transport, data);
+        this.rpc(client, data);
+      });
+
+      connection.on('close', () => {
+        client.destroy();
       });
     });
 
     this.httpServer.listen(port);
   }
 
-  rpc(transport, data) {
+  rpc(client, data) {
     const packet = jsonParse(data);
     if (!packet) {
-      transport.error(500, { error: new Error('JSON parsing error') });
+      client.error(500, { error: new Error('JSON parsing error') });
       return;
     }
     const { id, type, args } = packet;
@@ -79,31 +167,31 @@ class Server {
       packet.method.trim().length === 0 ||
       !args
     ) {
-      transport.error(400, { id, error: new Error('Packet structure error') });
+      client.error(400, { id, error: new Error('Packet structure error') });
       return;
     }
     const [unit, method] = packet.method.split('/');
     const handler = this.routing.get(`${unit}.${method}`);
     if (!handler) {
-      transport.error(404, { id });
+      client.error(404, { id });
       return;
     }
-    this.console.log(`${transport.ip}\t${packet.method}`);
 
-    // TODO: Pass context of the request as the argument to the first handler call
-    handler()
+    const context = client.createContext();
+    this.console.log(`${client.ip}\t${packet.method}`);
+    handler(context)
       .method(args)
       .then((result) => {
         // API handler may return error instead of throwing it so the check is needed
         if (result?.constructor?.name === 'Error') {
           const { code, httpCode = 200 } = result;
-          transport.error(code, { id, error: result, httpCode });
+          client.error(code, { id, error: result, httpCode });
           return;
         }
-        transport.send({ type: 'callback', id, result });
+        client.send({ type: 'callback', id, result });
       })
       .catch((error) => {
-        transport.error(error.code, { id, error });
+        client.error(error.code, { id, error });
       });
   }
 }
