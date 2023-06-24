@@ -35,21 +35,24 @@ const sandbox = {
 
   const configPath = path.join(appPath, './config');
   const config = await loadDir(configPath, sandbox);
-  sandbox.config = Object.freeze(config);
+  sandbox.config = config;
 
   const db = require('./lib/db.js')(config.database);
   sandbox.db = Object.freeze(db);
 
   const libPath = path.join(appPath, './lib');
-  const lib = await loadDir(libPath, sandbox);
+  const lib = await loadDir(libPath, sandbox, { commonSandbox: true });
   sandbox.lib = Object.freeze(lib);
 
   const domainPath = path.join(appPath, './domain');
-  const domain = await loadDir(domainPath, sandbox);
+  const domain = await loadDir(domainPath, sandbox, { commonSandbox: true });
   sandbox.domain = Object.freeze(domain);
 
   const apiPath = path.join(appPath, './api');
-  const api = await loadDir(apiPath, sandbox, true);
+  const api = await loadDir(apiPath, sandbox, {
+    commonSandbox: false,
+    contextualize: true,
+  });
   sandbox.api = Object.freeze(api);
   const routing = createRouting(api);
 
