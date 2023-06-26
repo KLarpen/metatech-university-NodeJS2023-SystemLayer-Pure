@@ -41,19 +41,24 @@ const sandbox = {
   sandbox.db = Object.freeze(db);
 
   const libPath = path.join(appPath, './lib');
-  const lib = await loadDir(libPath, sandbox, { commonSandbox: true });
-  sandbox.lib = Object.freeze(lib);
+  sandbox.lib = await loadDir(libPath, sandbox, {
+    commonSandbox: true,
+    deepFreeze: true,
+  });
 
   const domainPath = path.join(appPath, './domain');
-  const domain = await loadDir(domainPath, sandbox, { commonSandbox: true });
-  sandbox.domain = Object.freeze(domain);
+  sandbox.domain = await loadDir(domainPath, sandbox, {
+    commonSandbox: true,
+    deepFreeze: true,
+  });
 
   const apiPath = path.join(appPath, './api');
   const api = await loadDir(apiPath, sandbox, {
     commonSandbox: false,
+    deepFreeze: true,
     contextualize: true,
   });
-  sandbox.api = Object.freeze(api);
+  sandbox.api = api;
   const routing = createRouting(api);
 
   const application = { path: appPath, console, routing, config, server: null };

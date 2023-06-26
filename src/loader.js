@@ -30,6 +30,7 @@ module.exports = (options) => {
     settings = {
       commonSandbox: false,
       contextualize: false,
+      deepFreeze: false,
     },
   ) => {
     const entries = await fsp.readdir(dir, { withFileTypes: true });
@@ -42,7 +43,7 @@ module.exports = (options) => {
       const loader = entry.isFile() ? load : loadDir;
       container[key] = await loader(location, sandbox, settings);
     }
-    return container;
+    return settings.deepFreeze ? Object.freeze(container) : container;
   };
 
   const createRouting = (container, path = '', routing = new Map()) => {
