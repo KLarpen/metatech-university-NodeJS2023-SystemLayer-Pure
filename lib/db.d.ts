@@ -1,3 +1,4 @@
+import pgModule from 'pg';
 import type { Pool } from 'pg';
 
 type QueryResult = Promise<object[]>;
@@ -11,6 +12,7 @@ interface CrudRepository {
 }
 
 declare namespace db {
-  export const pg: Pool;
+  export const pg: typeof pgModule;
+  export const pgPool: Pool;
   export function crud(pgPool: Pool): (table: string) => CrudRepository;
 }
